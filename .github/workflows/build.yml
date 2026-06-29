@@ -21,101 +21,116 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Generate build files if missing (no Java code)
+      # ----- 仅生成缺失的构建文件（不覆盖已有文件） -----
+      - name: Generate missing build files
         run: |
           set -e
-          # 检查是否存在 app/build.gradle，如果不存在则生成所有构建文件
+          # 确保目录存在
+          mkdir -p app/src/main/res/values
+          mkdir -p app/src/main/res/mipmap-mdpi
+          mkdir -p app/src/main/res/mipmap-hdpi
+          mkdir -p app/src/main/res/mipmap-xhdpi
+          mkdir -p app/src/main/res/mipmap-xxhdpi
+
+          # app/build.gradle
           if [ ! -f "app/build.gradle" ]; then
-            echo "Build files not found, generating..."
-            mkdir -p app/src/main/res/values
-            mkdir -p app/src/main/res/mipmap-mdpi
-            mkdir -p app/src/main/res/mipmap-hdpi
-            mkdir -p app/src/main/res/mipmap-xhdpi
-            mkdir -p app/src/main/res/mipmap-xxhdpi
-
-            # app/build.gradle
-            cat > app/build.gradle <<'EOF'
-            apply plugin: 'com.android.application'
-            android {
-                compileSdkVersion 19
-                buildToolsVersion '26.0.2'
-                defaultConfig {
-                    applicationId 'com.teemo.launcher'
-                    minSdkVersion 19
-                    targetSdkVersion 19
-                    versionCode 1
-                    versionName '1.0'
-                }
-                compileOptions {
-                    sourceCompatibility JavaVersion.VERSION_1_7
-                    targetCompatibility JavaVersion.VERSION_1_7
-                }
-                buildTypes {
-                    debug { minifyEnabled true; proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro' }
-                    release { minifyEnabled true; proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro' }
-                }
-            }
-            dependencies {}
-            EOF
-
-            # proguard-rules.pro
-            cat > app/proguard-rules.pro <<'EOF'
-            -keep class com.teemo.launcher.MainActivity { *; }
-            -keep class com.teemo.launcher.MainActivity$* { *; }
-            EOF
-
-            # AndroidManifest.xml
-            cat > app/src/main/AndroidManifest.xml <<'EOF'
-            <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.teemo.launcher">
-                <uses-permission android:name="android.permission.WRITE_SETTINGS" />
-                <uses-permission android:name="android.permission.VIBRATE" />
-                <application android:allowBackup="true" android:icon="@mipmap/ic_launcher" android:label="@string/app_name" android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen">
-                    <activity android:name=".MainActivity" android:launchMode="singleInstance" android:excludeFromRecents="true" android:configChanges="orientation|keyboardHidden|screenSize">
-                        <intent-filter>
-                            <action android:name="android.intent.action.MAIN" />
-                            <category android:name="android.intent.category.HOME" />
-                            <category android:name="android.intent.category.DEFAULT" />
-                            <category android:name="android.intent.category.LAUNCHER" />
-                        </intent-filter>
-                    </activity>
-                </application>
-            </manifest>
-            EOF
-
-            # strings.xml
-            cat > app/src/main/res/values/strings.xml <<'EOF'
-            <resources>
-                <string name="app_name">桌面</string>
-            </resources>
-            EOF
-
-            echo "Build files generated."
+            printf '%s\n' \
+              "apply plugin: 'com.android.application'" \
+              "android {" \
+              "    compileSdkVersion 19" \
+              "    buildToolsVersion '26.0.2'" \
+              "    defaultConfig {" \
+              "        applicationId 'com.teemo.launcher'" \
+              "        minSdkVersion 19" \
+              "        targetSdkVersion 19" \
+              "        versionCode 1" \
+              "        versionName '1.0'" \
+              "    }" \
+              "    compileOptions {" \
+              "        sourceCompatibility JavaVersion.VERSION_1_7" \
+              "        targetCompatibility JavaVersion.VERSION_1_7" \
+              "    }" \
+              "    buildTypes {" \
+              "        debug { minifyEnabled true; proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro' }" \
+              "        release { minifyEnabled true; proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro' }" \
+              "    }" \
+              "}" \
+              "dependencies {}" > app/build.gradle
+            echo "Created app/build.gradle"
           else
-            echo "Build files already exist."
+            echo "app/build.gradle already exists, skipping"
           fi
 
-      - name: Install ImageMagick for icon generation
+          # proguard-rules.pro
+          if [ ! -f "app/proguard-rules.pro" ]; then
+            printf '%s\n' \
+              "-keep class com.teemo.launcher.MainActivity { *; }" \
+              "-keep class com.teemo.launcher.MainActivity$* { *; }" > app/proguard-rules.pro
+            echo "Created app/proguard-rules.pro"
+          else
+            echo "app/proguard-rules.pro already exists, skipping"
+          fi
+
+          # AndroidManifest.xml
+          if [ ! -f "app/src/main/AndroidManifest.xml" ]; then
+            printf '%s\n' \
+              '<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.teemo.launcher">' \
+              '    <uses-permission android:name="android.permission.WRITE_SETTINGS" />' \
+              '    <uses-permission android:name="android.permission.VIBRATE" />' \
+              '    <application android:allowBackup="true" android:icon="@mipmap/ic_launcher" android:label="@string/app_name" android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen">' \
+              '        <activity android:name=".MainActivity" android:launchMode="singleInstance" android:excludeFromRecents="true" android:configChanges="orientation|keyboardHidden|screenSize">' \
+              '            <intent-filter>' \
+              '                <action android:name="android.intent.action.MAIN" />' \
+              '                <category android:name="android.intent.category.HOME" />' \
+              '                <category android:name="android.intent.category.DEFAULT" />' \
+              '                <category android:name="android.intent.category.LAUNCHER" />' \
+              '            </intent-filter>' \
+              '        </activity>' \
+              '    </application>' \
+              '</manifest>' > app/src/main/AndroidManifest.xml
+            echo "Created app/src/main/AndroidManifest.xml"
+          else
+            echo "AndroidManifest.xml already exists, skipping"
+          fi
+
+          # strings.xml
+          if [ ! -f "app/src/main/res/values/strings.xml" ]; then
+            printf '%s\n' \
+              '<resources>' \
+              '    <string name="app_name">桌面</string>' \
+              '</resources>' > app/src/main/res/values/strings.xml
+            echo "Created strings.xml"
+          else
+            echo "strings.xml already exists, skipping"
+          fi
+
+      # ----- 生成方形图标（仅当不存在时） -----
+      - name: Install ImageMagick
         run: sudo apt-get update && sudo apt-get install -y imagemagick
 
-      - name: Generate square icon (PNG)
+      - name: Generate square icons if missing
         run: |
-          # 生成一个简单的蓝色方形图标（带白色边框），尺寸：mdpi(48x48), hdpi(72x72), xhdpi(96x96), xxhdpi(144x144)
-          for size in 48 72 96 144; do
-            case $size in
-              48)  dir="mipmap-mdpi" ;;
-              72)  dir="mipmap-hdpi" ;;
-              96)  dir="mipmap-xhdpi" ;;
-              144) dir="mipmap-xxhdpi" ;;
-            esac
-            mkdir -p app/src/main/res/${dir}
-            # 生成一个蓝色方块，带白色边框，中间可加一个白色小方块（简化为纯色）
-            convert -size ${size}x${size} xc:#2196F3 \
-              -stroke white -strokewidth 2 -fill none -draw "rectangle 2,2 $((size-3)),$((size-3))" \
-              app/src/main/res/${dir}/ic_launcher.png
-            # 可选：加一个简单的白色圆点或文字，但保持简洁
-          done
-          echo "Icons generated."
+          # 检查 mipmap-mdpi/ic_launcher.png 是否存在，若不存在则生成所有尺寸
+          if [ ! -f "app/src/main/res/mipmap-mdpi/ic_launcher.png" ]; then
+            echo "Icons missing, generating..."
+            for size in 48 72 96 144; do
+              case $size in
+                48)  dir="mipmap-mdpi" ;;
+                72)  dir="mipmap-hdpi" ;;
+                96)  dir="mipmap-xhdpi" ;;
+                144) dir="mipmap-xxhdpi" ;;
+              esac
+              mkdir -p app/src/main/res/${dir}
+              convert -size ${size}x${size} xc:#2196F3 \
+                -stroke white -strokewidth 2 -fill none -draw "rectangle 2,2 $((size-3)),$((size-3))" \
+                app/src/main/res/${dir}/ic_launcher.png
+            done
+            echo "Icons generated."
+          else
+            echo "Icons already exist, skipping generation."
+          fi
 
+      # ----- 安装 JDK 21（用于 SDK Manager） -----
       - name: Set up JDK 21 (for SDK manager)
         uses: actions/setup-java@v4
         with:
@@ -123,6 +138,7 @@ jobs:
           java-version: '21'
           cache: 'none'
 
+      # ----- 设置 Android SDK -----
       - name: Setup Android SDK
         uses: android-actions/setup-android@v4
 
@@ -135,6 +151,7 @@ jobs:
           sdkmanager "platform-tools"
           sdkmanager "extras;android;m2repository"
 
+      # ----- 切换至 JDK 8 用于 Gradle 构建 -----
       - name: Set up JDK 8 (for Gradle build)
         uses: actions/setup-java@v4
         with:
@@ -167,6 +184,7 @@ jobs:
             exit 1
           fi
 
+      # ----- 自动版本号递增（基于 bot-v* tags） -----
       - name: Determine next version
         id: version
         run: |
