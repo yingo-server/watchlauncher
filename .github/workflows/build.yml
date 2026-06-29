@@ -11,7 +11,7 @@ jobs:
     env:
       PROJECT_DIR: .
       APK_OUTPUT: app/build/outputs/apk/debug/app-debug.apk
-      GRADLE_VERSION: 4.10.1
+      GRADLE_VERSION: 5.6.4          # 从 4.10.1 升级到 5.6.4
       GRADLE_USER_HOME: /tmp/.gradle
       TAG_PREFIX: bot-v
 
@@ -130,7 +130,6 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
-          # 不使用缓存（默认无缓存）
 
       # ----- 设置 Android SDK -----
       - name: Setup Android SDK
@@ -151,7 +150,6 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '8'
-          # 不使用缓存
 
       - name: Download and install Gradle
         run: |
