@@ -25,14 +25,12 @@ jobs:
       - name: Generate missing build files
         run: |
           set -e
-          # 确保目录存在
           mkdir -p app/src/main/res/values
           mkdir -p app/src/main/res/mipmap-mdpi
           mkdir -p app/src/main/res/mipmap-hdpi
           mkdir -p app/src/main/res/mipmap-xhdpi
           mkdir -p app/src/main/res/mipmap-xxhdpi
 
-          # app/build.gradle
           if [ ! -f "app/build.gradle" ]; then
             printf '%s\n' \
               "apply plugin: 'com.android.application'" \
@@ -61,7 +59,6 @@ jobs:
             echo "app/build.gradle already exists, skipping"
           fi
 
-          # proguard-rules.pro
           if [ ! -f "app/proguard-rules.pro" ]; then
             printf '%s\n' \
               "-keep class com.teemo.launcher.MainActivity { *; }" \
@@ -71,7 +68,6 @@ jobs:
             echo "app/proguard-rules.pro already exists, skipping"
           fi
 
-          # AndroidManifest.xml
           if [ ! -f "app/src/main/AndroidManifest.xml" ]; then
             printf '%s\n' \
               '<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.teemo.launcher">' \
@@ -93,7 +89,6 @@ jobs:
             echo "AndroidManifest.xml already exists, skipping"
           fi
 
-          # strings.xml
           if [ ! -f "app/src/main/res/values/strings.xml" ]; then
             printf '%s\n' \
               '<resources>' \
@@ -110,7 +105,6 @@ jobs:
 
       - name: Generate square icons if missing
         run: |
-          # 检查 mipmap-mdpi/ic_launcher.png 是否存在，若不存在则生成所有尺寸
           if [ ! -f "app/src/main/res/mipmap-mdpi/ic_launcher.png" ]; then
             echo "Icons missing, generating..."
             for size in 48 72 96 144; do
@@ -136,7 +130,7 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
-          cache: 'none'
+          # 不使用缓存（默认无缓存）
 
       # ----- 设置 Android SDK -----
       - name: Setup Android SDK
@@ -157,7 +151,7 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '8'
-          cache: 'none'
+          # 不使用缓存
 
       - name: Download and install Gradle
         run: |
