@@ -1,0 +1,89 @@
+name: Manual Build APK (No Cache)
+
+on:
+  workflow_dispatch:   # 仅手动触发
+
+jobs:
+  build:
+    name: Build APK for Android 4.4 (No Cache)
+    runs-on: ubuntu-latest
+
+    env:
+      PROJECT_DIR: .
+      APK_OUTPUT: app/build/outputs/apk/debug/app-debug.apk
+      GRADLE_VERSION: 4.10.1
+      GRADLE_USER_HOME: /tmp/.gradle   # 临时目录，避免缓存
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21 (for SDK manager)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: 'none'   # 禁用 Java 缓存
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v4
+        # 该 Action 默认可能缓存 SDK，但我们可以设置 ANDROID_HOME 为临时目录（可选）
+      - name: Install SDK components
+        run: |
+          set -e
+          yes | sdkmanager --licenses
+          sdkmanager "platforms;android-19"
+          sdkmanager "build-tools;26.0.2"
+          sdkmanager "platform-tools"
+          sdkmanager "extras;android;m2repository"
+
+      - name: Set up JDK 8 (for Gradle build)
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '8'
+          cache: 'none'
+
+      - name: Download and install Gradle
+        run: |
+          wget -q https://services.gradle.org/distributions/gradle-${{ env.GRADLE_VERSION }}-bin.zip
+          unzip -q gradle-${{ env.GRADLE_VERSION }}-bin.zip -d /opt/
+          echo "/opt/gradle-${{ env.GRADLE_VERSION }}/bin" >> $GITHUB_PATH
+
+      - name: Build Debug APK (no cache)
+        run: |
+          cd ${{ env.PROJECT_DIR }}
+          gradle clean assembleDebug --info --stacktrace --no-build-cache --refresh-dependencies
+        env:
+          JAVA_OPTS: -Dfile.encoding=UTF-8
+          GRADLE_USER_HOME: ${{ env.GRADLE_USER_HOME }}
+
+      - name: Verify APK
+        run: |
+          cd ${{ env.PROJECT_DIR }}
+          if [ -f "${{ env.APK_OUTPUT }}" ]; then
+            echo "APK generated successfully!"
+            ls -lh "${{ env.APK_OUTPUT }}"
+          else
+            echo "ERROR: APK not found"
+            exit 1
+          fi
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TeemoLauncher-debug
+          path: ${{ env.PROJECT_DIR }}/${{ env.APK_OUTPUT }}
+          retention-days: 7
+
+      # （可选）如需自动发布到 Release，可取消以下注释，但注意需要 tag 触发
+      # - name: Create GitHub Release
+      #   uses: softprops/action-gh-release@v2
+      #   if: startsWith(github.ref, 'refs/tags/')
+      #   with:
+      #     files: ${{ env.PROJECT_DIR }}/${{ env.APK_OUTPUT }}
+      #     generate_release_notes: true
+      #     draft: false
+      #     prerelease: false
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
