@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
-import android.content.res.TypedValue;
 import android.graphics.Point;
 import android.graphics.drawable.Drawable;
 import android.hardware.Camera;
@@ -22,6 +21,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.util.TypedValue;
 import android.view.animation.LinearInterpolator;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -40,6 +40,11 @@ import java.util.List;
 import java.util.Locale;
 
 public class MainActivity extends Activity implements View.OnTouchListener {
+
+    // 手势回调接口（供 LauncherScrollView 使用）
+    interface GestureListener {
+        void onSwipeBack();
+    }
 
     // 页面状态
     private static final int PAGE_CLOCK = 0;
@@ -774,7 +779,7 @@ public class MainActivity extends Activity implements View.OnTouchListener {
     }
 
     // ---------- 手势回调（LauncherScrollView 触发） ----------
-    private LauncherScrollView.GestureListener gestureListener = new LauncherScrollView.GestureListener() {
+    private GestureListener gestureListener = new GestureListener() {
         @Override
         public void onSwipeBack() {
             if (currentPage == PAGE_APPS) {
@@ -790,10 +795,6 @@ public class MainActivity extends Activity implements View.OnTouchListener {
         // 模式：横滑返回 / 顶部下拉返回
         private static final int MODE_H_SWIPE_BACK = 0;
         private static final int MODE_PULL_DOWN = 1;
-
-        interface GestureListener {
-            void onSwipeBack();
-        }
 
         private int mode;
         private GestureListener listener;
