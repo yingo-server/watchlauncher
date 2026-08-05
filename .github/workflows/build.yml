@@ -1,6 +1,9 @@
-name: Manual Build & Release (No Cache, Auto Tag)
+name: Build & Release (Push / Manual, No Cache, Auto Tag)
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
@@ -38,7 +41,7 @@ jobs:
               "apply plugin: 'com.android.application'" \
               "android {" \
               "    compileSdkVersion 19" \
-              "    buildToolsVersion '26.0.2'" \
+              "    buildToolsVersion '28.0.3'" \
               "    defaultConfig {" \
               "        applicationId 'com.teemo.launcher'" \
               "        minSdkVersion 19" \
@@ -142,7 +145,7 @@ jobs:
           set -e
           yes | sdkmanager --licenses
           sdkmanager "platforms;android-19"
-          sdkmanager "build-tools;26.0.2"
+          sdkmanager "build-tools;28.0.3"
           sdkmanager "platform-tools"
           sdkmanager "extras;android;m2repository"
 

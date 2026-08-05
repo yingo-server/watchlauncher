@@ -1,0 +1,14 @@
+# 凭据 / 敏感信息（kry.txt 是 GitHub PAT，绝不能入库）
+kry.txt
+
+# 构建产物
+.gradle/
+build/
+app/build/
+
+# IDE
+.idea/
+*.iml
+
+# 会话目录
+.claude/
